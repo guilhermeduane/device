@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.oneglobal</groupId>
-    <artifactId>chalenge</artifactId>
+    <artifactId>challenge</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>chalenge</name>
-    <description>chalenge</description>
+    <name>challenge</name>
+    <description>challenge</description>
     <url/>
     <licenses>
         <license/>
