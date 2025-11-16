@@ -1,7 +1,9 @@
 package com.oneglobal.chalenge.service;
 
 import com.oneglobal.chalenge.entity.Device;
+import com.oneglobal.chalenge.entity.dto.DeviceRequestDTO;
 import com.oneglobal.chalenge.entity.enumerator.DeviceState;
+import com.oneglobal.chalenge.mapper.DeviceMapper;
 import com.oneglobal.chalenge.repository.DeviceRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -13,12 +15,15 @@ import java.util.Optional;
 public class DeviceService {
 
     private final DeviceRepository repository;
+    private final DeviceMapper mapper;
 
-    public DeviceService(DeviceRepository repository) {
+    public DeviceService(DeviceRepository repository, DeviceMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
-    public Device create(Device device) {
+    public Device create(DeviceRequestDTO dto) {
+        Device device = mapper.toEntity(dto);
         return repository.save(device);
     }
 
@@ -39,41 +44,36 @@ public class DeviceService {
     }
 
     @Transactional
-    public Device update(Long id, Device deviceAtualizado) {
+    public Device update(Long id, DeviceRequestDTO dto) {
         Device deviceExistente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
 
         if (deviceExistente.getState() == DeviceState.IN_USE) {
-            if (!deviceExistente.getName().equals(deviceAtualizado.getName()) ||
-                    !deviceExistente.getBrand().equals(deviceAtualizado.getBrand())) {
+            if (!deviceExistente.getName().equals(dto.name()) ||
+                    !deviceExistente.getBrand().equals(dto.brand())) {
                 throw new IllegalStateException("Cannot update name or brand when device is IN_USE");
             }
         }
 
-        deviceExistente.setName(deviceAtualizado.getName());
-        deviceExistente.setBrand(deviceAtualizado.getBrand());
-        deviceExistente.setState(deviceAtualizado.getState());
+        mapper.updateEntityFromDto(dto, deviceExistente);
         return repository.save(deviceExistente);
     }
 
     @Transactional
-    public Device patch(Long id, Device updates) {
-        Device deviceExistente = repository.findById(id)
+    public Device patch(Long id, DeviceRequestDTO dto) {
+        Device device = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
 
         boolean isTryingToChangeRestrictedFields =
-                (updates.getName() != null && !updates.getName().equals(deviceExistente.getName())) ||
-                        (updates.getBrand() != null && !updates.getBrand().equals(deviceExistente.getBrand()));
+                (dto.name() != null && !dto.name().equals(device.getName())) ||
+                        (dto.brand() != null && !dto.brand().equals(device.getBrand()));
 
-        if (deviceExistente.getState() == DeviceState.IN_USE && isTryingToChangeRestrictedFields) {
+        if (device.getState() == DeviceState.IN_USE && isTryingToChangeRestrictedFields) {
             throw new IllegalStateException("Cannot update name or brand when device is IN_USE");
         }
 
-        if (updates.getName() != null) deviceExistente.setName(updates.getName());
-        if (updates.getBrand() != null) deviceExistente.setBrand(updates.getBrand());
-        if (updates.getState() != null) deviceExistente.setState(updates.getState());
-
-        return repository.save(deviceExistente);
+        mapper.updateEntityFromDto(dto, device);
+        return repository.save(device);
     }
 
     public void delete(Long id) {

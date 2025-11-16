@@ -1,7 +1,10 @@
 package com.oneglobal.chalenge.controller;
 
 import com.oneglobal.chalenge.entity.Device;
+import com.oneglobal.chalenge.entity.dto.DeviceRequestDTO;
+import com.oneglobal.chalenge.entity.dto.DeviceResponseDTO;
 import com.oneglobal.chalenge.entity.enumerator.DeviceState;
+import com.oneglobal.chalenge.mapper.DeviceMapper;
 import com.oneglobal.chalenge.service.DeviceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,23 +22,27 @@ import java.util.List;
 public class DeviceController {
 
     private final DeviceService service;
+    private final DeviceMapper mapper;
 
-    public DeviceController(DeviceService service) {
+    public DeviceController(DeviceService service, DeviceMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     @Operation(summary = "Create a new device")
     @ApiResponse(responseCode = "201", description = "Device created successfully")
     @PostMapping
-    public ResponseEntity<Device> create(@RequestBody Device device) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(device));
+    public ResponseEntity<DeviceResponseDTO> create(@RequestBody DeviceRequestDTO dto) {
+        Device newDevice = service.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(newDevice));
     }
 
     @Operation(summary = "List all devices")
     @ApiResponse(responseCode = "200", description = "List of all devices")
     @GetMapping
-    public ResponseEntity<List<Device>> getAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<DeviceResponseDTO>> getAll() {
+        List<Device> devices = service.findAll();
+        return ResponseEntity.ok(mapper.toResponseDTOList(devices));
     }
 
     @Operation(summary = "Get a single device by its ID")
@@ -44,8 +51,9 @@ public class DeviceController {
             @ApiResponse(responseCode = "404", description = "Device not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Device> getById(@PathVariable Long id) {
+    public ResponseEntity<DeviceResponseDTO> getById(@PathVariable Long id) {
         return service.findById(id)
+                .map(mapper::toResponseDTO)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -53,15 +61,17 @@ public class DeviceController {
     @Operation(summary = "Find devices by brand")
     @ApiResponse(responseCode = "200", description = "List of devices matching the brand")
     @GetMapping("/search/brand")
-    public ResponseEntity<List<Device>> getByBrand(@RequestParam String brand) {
-        return ResponseEntity.ok(service.findByBrand(brand));
+    public ResponseEntity<List<DeviceResponseDTO>> getByBrand(@RequestParam String brand) {
+        List<Device> devices = service.findByBrand(brand);
+        return ResponseEntity.ok(mapper.toResponseDTOList(devices));
     }
 
     @Operation(summary = "Find devices by state")
     @ApiResponse(responseCode = "200", description = "List of devices matching the state")
     @GetMapping("/search/state")
-    public ResponseEntity<List<Device>> getByState(@RequestParam DeviceState state) {
-        return ResponseEntity.ok(service.findByState(state));
+    public ResponseEntity<List<DeviceResponseDTO>> getByState(@RequestParam DeviceState state) {
+        List<Device> devices = service.findByState(state);
+        return ResponseEntity.ok(mapper.toResponseDTOList(devices));
     }
 
     @Operation(summary = "Fully update an existing device",
@@ -72,9 +82,10 @@ public class DeviceController {
             @ApiResponse(responseCode = "409", description = "Conflict: Update violates business rules (e.g., updating Name/Brand while IN_USE)")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Device> update(@PathVariable Long id, @RequestBody Device device) {
+    public ResponseEntity<DeviceResponseDTO> update(@PathVariable Long id, @RequestBody DeviceRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, device));
+            Device updatedDevice = service.update(id, dto);
+            return ResponseEntity.ok(mapper.toResponseDTO(updatedDevice));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {
@@ -90,9 +101,10 @@ public class DeviceController {
             @ApiResponse(responseCode = "409", description = "Conflict: Update violates business rules (e.g., updating Name/Brand while IN_USE)")
     })
     @PatchMapping("/{id}")
-    public ResponseEntity<Device> patch(@PathVariable Long id, @RequestBody Device device) {
+    public ResponseEntity<DeviceResponseDTO> patch(@PathVariable Long id, @RequestBody DeviceRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.patch(id, device));
+            Device patchedDevice = service.patch(id, dto);
+            return ResponseEntity.ok(mapper.toResponseDTO(patchedDevice));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {
