@@ -43,7 +43,7 @@ docker-compose up --build
 ```
 The Spring application will be available at http://localhost:8080 and the database at localhost:3306.
 
-## Tests
+## 4. Tests
 
 The project includes unit tests for the Service and Controller layers, covering all business logic.
 
@@ -61,3 +61,8 @@ Tests are executed **automatically** by Maven inside the Docker container every 
 
 If the build fails, it indicates that one or more tests have failed.
 
+##  API Documentation (Swagger)
+
+Once the application is running, the interactive API documentation (Swagger UI) can be accessed in your browser:
+
+* **URL:** `http://localhost:8080/swagger-ui.html`
