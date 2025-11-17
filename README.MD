@@ -61,7 +61,7 @@ Tests are executed **automatically** by Maven inside the Docker container every 
 
 If the build fails, it indicates that one or more tests have failed.
 
-##  API Documentation (Swagger)
+##  5. API Documentation (Swagger)
 
 Once the application is running, the interactive API documentation (Swagger UI) can be accessed in your browser:
 
